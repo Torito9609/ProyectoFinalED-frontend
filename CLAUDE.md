@@ -49,5 +49,16 @@ Que las estructuras de datos queden muy claras (por qué, cómo se usan, cómo e
 - Los commits hechos con Claude Code llevan la línea `Co-Authored-By` (registro del uso de IA).
 
 ## Plan
-**Hito 1:** (1) proyecto Vite con React Three Fiber → (2) tipos y cliente de la API → (3) sondeo y HUD de
-control con bitácora → (4) escena isométrica con las máquinas.
+**Hito 1 (terminado el 10 de noviembre):** (1) proyecto Vite con React Three Fiber → (2) tipos y cliente de
+la API → (3) sondeo y HUD de control con bitácora → (4) escena isométrica con las máquinas → (5) rutas por
+compañía con pestañas.
+
+**Pendiente** (el detalle está en `docs/sesiones/2026-11-10-segunda.md` del backend, sección 5):
+- Ponerse al día con el contrato: `tipoFallo`, `especialidad`, `tecnicosLibres` como dos colas,
+  `puntajeFallos`/`numeroOverhauls`/`recomendacion` y el estado `EN_OVERHAUL` (con color propio).
+- Formulario para crear compañías y máquinas, y la vista del ranking.
+- Modelos 3D por tipo de máquina hechos en código; técnicos con modelos `.glb` de un pack libre. El bloom de
+  las balizas necesita `@react-three/postprocessing`: proponerlo antes.
+- **El modo manual es un juego de gestión** (sección 16 del `CLAUDE.md` del backend): botones de clasificar,
+  asignar a mecánico o eléctrico, overhauls y reemplazo; caja, quiebra y resumen de la partida. Llega a la API
+  con los commits 20 y 22 del backend.
