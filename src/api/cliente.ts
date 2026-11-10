@@ -1,10 +1,10 @@
 /**
  * Cliente de la API del backend.
  *
- * Es el ÚNICO archivo que conoce URLs y rutas: el resto de la app llama a estas funciones. Así, cuando
- * el backend pase de `/api/planta` a `/api/companias/{id}` (commit 19), solo cambia este archivo.
+ * Es el ÚNICO archivo que conoce URLs y rutas: el resto de la app llama a estas funciones. Así, si
+ * una ruta del backend cambia, solo cambia este archivo.
  */
-import type { ErrorApi, EstadoPlanta, EstadoSimulacion } from './tipos'
+import type { ErrorApi, EstadoPlanta, EstadoSimulacion, ResumenCompania } from './tipos'
 
 /** URL base del backend; se puede cambiar con la variable `VITE_API_URL`. */
 const URL_BASE: string = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
@@ -24,10 +24,17 @@ async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT', ruta: string): Promise<T
   return (await respuesta.json()) as T
 }
 
-/** Estado completo de la planta: inventario, colas, pila y bitácora. */
-export function obtenerPlanta(): Promise<EstadoPlanta> {
-  return pedir('GET', '/api/planta')
+/** Las compañías con sus totales, en el orden de sus ids. */
+export function listarCompanias(): Promise<ResumenCompania[]> {
+  return pedir('GET', '/api/companias')
 }
+
+/** Estado completo de una compañía: inventario, colas, pila y bitácora. */
+export function obtenerCompania(idCompania: number): Promise<EstadoPlanta> {
+  return pedir('GET', `/api/companias/${idCompania}`)
+}
+
+// El reloj es uno solo para toda la organización: estas acciones no llevan compañía.
 
 /** Pone a correr el reloj de la simulación. */
 export function iniciar(): Promise<EstadoSimulacion> {

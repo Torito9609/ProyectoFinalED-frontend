@@ -13,13 +13,16 @@ export type EstadoMaquina =
   | 'EN_MANTENIMIENTO'
   | 'PARADA_MANUAL'
 
+/** Código del tipo de máquina en el catálogo del backend; sirve para elegir su modelo 3D. */
+export type TipoMaquina = 'PRENSA' | 'TORNO' | 'ROBOT' | 'COMPRESOR' | 'HORNO' | 'BOMBA'
+
 /** Prioridades de una orden de trabajo: P1 CRÍTICA … P4 BAJA. */
 export type Prioridad = 'P1' | 'P2' | 'P3' | 'P4'
 
 /** Magnitud de un fallo inyectado. */
 export type Magnitud = 'LEVE' | 'MODERADA' | 'SEVERA'
 
-/** Respuesta de `/api/simulacion`. */
+/** Respuesta de `/api/simulacion`. `semilla` es la maestra, de la que se derivan las de las compañías. */
 export interface EstadoSimulacion {
   tick: number
   semilla: number
@@ -61,7 +64,10 @@ export interface ColaCircular {
 export interface Maquina {
   indice: number
   etiqueta: string
-  tipo: string
+  /** Código del catálogo, por ejemplo `PRENSA`. */
+  tipo: TipoMaquina
+  /** Texto para mostrar, por ejemplo `Prensa hidráulica`. */
+  tipoDescripcion: string
   estado: EstadoMaquina
   carga: number
   ticksDesdeMantenimiento: number
@@ -116,9 +122,13 @@ export interface ColaPrioridad {
   tamano: number
 }
 
-/** Respuesta de `GET /api/planta`: una foto consistente de toda la planta. */
+/** Respuesta de `GET /api/companias/{id}`: una foto consistente de la planta de una compañía. */
 export interface EstadoPlanta {
+  /** Id de la compañía: su índice en la organización. */
+  idCompania: number
+  nombre: string
   tick: number
+  /** Semilla de esta compañía, derivada de la maestra. */
   semilla: number
   enEjecucion: boolean
   maquinas: Maquina[]
@@ -132,6 +142,18 @@ export interface EstadoPlanta {
   pilaDeshacer: string[]
   /** De la línea más antigua a la más reciente. */
   bitacora: string[]
+}
+
+/** Totales de una compañía: un elemento de `GET /api/companias`. */
+export interface ResumenCompania {
+  id: number
+  nombre: string
+  numeroMaquinas: number
+  /** Cuántas máquinas hay en cada estado; trae todos los estados, incluso los que tienen 0. */
+  maquinasPorEstado: Record<EstadoMaquina, number>
+  eventosPendientes: number
+  ordenesPendientes: number
+  tecnicosLibres: number
 }
 
 /** Cuerpo de todas las respuestas de error (400, 404, 409). */

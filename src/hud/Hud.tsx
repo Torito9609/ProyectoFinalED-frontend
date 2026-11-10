@@ -1,7 +1,10 @@
-import type { EstadoPlanta } from '../api/tipos'
+import type { EstadoPlanta, ResumenCompania } from '../api/tipos'
 
 interface PropsHud {
   planta: EstadoPlanta | null
+  companias: ResumenCompania[]
+  idCompania: number
+  seleccionarCompania: (id: number) => void
   error: string | null
   iniciar: () => void
   pausar: () => void
@@ -10,10 +13,12 @@ interface PropsHud {
 }
 
 /**
- * Barra superior: tick, semilla y controles de la simulación.
- * Si el backend no responde, muestra el error debajo.
+ * Barra superior: controles de la simulación, tick y semilla, y debajo una pestaña por compañía.
+ * Si el backend no responde, muestra el error al final.
  */
-export function Hud({ planta, error, iniciar, pausar, paso, reiniciar }: PropsHud) {
+export function Hud(props: PropsHud) {
+  const { planta, companias, idCompania, seleccionarCompania, error } = props
+
   return (
     <div className="hud-superior">
       <div className="panel barra">
@@ -21,12 +26,12 @@ export function Hud({ planta, error, iniciar, pausar, paso, reiniciar }: PropsHu
         {planta ? (
           <>
             {planta.enEjecucion ? (
-              <button onClick={pausar}>⏸ Pausar</button>
+              <button onClick={props.pausar}>⏸ Pausar</button>
             ) : (
-              <button onClick={iniciar}>▶ Iniciar</button>
+              <button onClick={props.iniciar}>▶ Iniciar</button>
             )}
-            <button onClick={paso}>Paso</button>
-            <button onClick={reiniciar}>Reiniciar</button>
+            <button onClick={props.paso}>Paso</button>
+            <button onClick={props.reiniciar}>Reiniciar</button>
             <span className="dato">
               Tick <b>{planta.tick}</b>
             </span>
@@ -38,6 +43,19 @@ export function Hud({ planta, error, iniciar, pausar, paso, reiniciar }: PropsHu
           <span className="dato">Conectando…</span>
         )}
       </div>
+      {companias.length > 0 && (
+        <div className="panel pestanas">
+          {companias.map((compania) => (
+            <button
+              key={compania.id}
+              className={compania.id === idCompania ? 'activa' : ''}
+              onClick={() => seleccionarCompania(compania.id)}
+            >
+              {compania.nombre}
+            </button>
+          ))}
+        </div>
+      )}
       {error && <div className="panel error">{error}</div>}
     </div>
   )

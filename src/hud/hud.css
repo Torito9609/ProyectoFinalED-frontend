@@ -59,6 +59,33 @@
   background: #3a4656;
 }
 
+.pestanas {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.pestanas button {
+  font: inherit;
+  color: var(--texto-suave);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.pestanas button:hover {
+  color: var(--texto);
+  background: #2c3644;
+}
+
+.pestanas button.activa {
+  color: var(--texto);
+  background: #3a4656;
+  border-color: var(--borde);
+}
+
 .error {
   color: #ffd7d7;
   background: rgba(150, 30, 30, 0.85);
