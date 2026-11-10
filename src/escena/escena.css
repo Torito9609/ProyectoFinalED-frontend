@@ -1,0 +1,20 @@
+/* Etiquetas HTML ancladas a la escena 3D. */
+
+.etiqueta-maquina {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font: 12px/1.35 var(--mono);
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.etiqueta-maquina .indice {
+  color: var(--texto-suave);
+}
+
+.etiqueta-maquina .estado {
+  font: 11px var(--sans);
+}
