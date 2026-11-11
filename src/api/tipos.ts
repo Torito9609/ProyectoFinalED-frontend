@@ -5,13 +5,18 @@
  * Si el contrato cambia, se cambia allá primero y luego aquí.
  */
 
-/** Estados de una máquina. */
+// ---------------------------------------------------------------------------------------------
+// Enumerados: viajan como texto, con su nombre
+// ---------------------------------------------------------------------------------------------
+
+/** Estados de una máquina. `EN_OVERHAUL`: un técnico del fabricante le hace un overhaul; no produce. */
 export type EstadoMaquina =
   | 'OPERANDO'
   | 'EN_ALARMA'
   | 'DETENIDA'
   | 'EN_MANTENIMIENTO'
   | 'PARADA_MANUAL'
+  | 'EN_OVERHAUL'
 
 /** Código del tipo de máquina en el catálogo del backend; sirve para elegir su modelo 3D. */
 export type TipoMaquina = 'PRENSA' | 'TORNO' | 'ROBOT' | 'COMPRESOR' | 'HORNO' | 'BOMBA'
@@ -22,12 +27,42 @@ export type Prioridad = 'P1' | 'P2' | 'P3' | 'P4'
 /** Magnitud de un fallo inyectado. */
 export type Magnitud = 'LEVE' | 'MODERADA' | 'SEVERA'
 
+/** Tipo de fallo de un sensor; es también la especialidad de un técnico. */
+export type TipoFallo = 'MECANICO' | 'ELECTRICO'
+
+/** Modo de la simulación: en `MANUAL` el jugador clasifica, asigna y despacha los overhauls. */
+export type Modo = 'AUTOMATICO' | 'MANUAL'
+
+/** Recomendación del ranking según el puntaje de fallos y los overhauls recibidos. */
+export type Recomendacion = 'NINGUNA' | 'OVERHAUL' | 'REEMPLAZO'
+
+// ---------------------------------------------------------------------------------------------
+// Simulación y partida
+// ---------------------------------------------------------------------------------------------
+
 /** Respuesta de `/api/simulacion`. `semilla` es la maestra, de la que se derivan las de las compañías. */
 export interface EstadoSimulacion {
   tick: number
   semilla: number
   enEjecucion: boolean
+  modo: Modo
+  duracionPartida: number
+  /** Al terminar, el reloj se pausa y solo `reiniciar` empieza otra partida. */
+  partidaTerminada: boolean
 }
+
+/** Respuesta de `GET /api/partida/resumen`; con `terminada` en `true` es el resultado final. */
+export interface ResumenPartida {
+  tick: number
+  duracionPartida: number
+  terminada: boolean
+  modo: Modo
+  companias: ResumenCompania[]
+}
+
+// ---------------------------------------------------------------------------------------------
+// Planta de una compañía
+// ---------------------------------------------------------------------------------------------
 
 /** Definición de una variable medida, con los umbrales para colorear sus valores. */
 export interface Sensor {
@@ -37,6 +72,8 @@ export interface Sensor {
   umbralAdvertencia: number
   umbralAlto: number
   umbralCritico: number
+  /** La especialidad que repara los fallos de este sensor. */
+  tipoFallo: TipoFallo
 }
 
 /** Una lectura: `valores[k]` corresponde a `sensores[k]` de su máquina. */
@@ -74,6 +111,12 @@ export interface Maquina {
   intervaloPreventivo: number
   tieneAnomalia: boolean
   alarmaActiva: boolean
+  /** Clave del ranking: P1 suma 3, P2 suma 2, P3 suma 1, desde el último overhaul. */
+  puntajeFallos: number
+  numeroOverhauls: number
+  recomendacion: Recomendacion
+  /** Ya tiene una solicitud esperando en el montículo: no se puede aprobar otra. */
+  overhaulPendiente: boolean
   sensores: Sensor[]
   lecturas: ColaCircular
 }
@@ -86,9 +129,10 @@ export interface EventoFallo {
   nombreSensor: string
   valorLeido: number
   tick: number
+  tipoFallo: TipoFallo
 }
 
-/** Evento ya clasificado. */
+/** Evento ya clasificado. `tipoFallo` es la especialidad que pide. */
 export interface OrdenTrabajo {
   id: number
   indiceMaquina: number
@@ -97,11 +141,13 @@ export interface OrdenTrabajo {
   descripcion: string
   tickCreacion: number
   duracionEstimadaTicks: number
+  tipoFallo: TipoFallo
 }
 
-/** Técnico interno; los ocupados traen `ordenActual` y `ticksRestantes`. */
+/** Técnico interno; los ocupados traen `ordenActual` y `ticksRestantes` (ya con la penalidad). */
 export interface Tecnico {
   nombre: string
+  especialidad: TipoFallo
   libre: boolean
   ordenActual: OrdenTrabajo | null
   ticksRestantes: number
@@ -131,12 +177,18 @@ export interface EstadoPlanta {
   /** Semilla de esta compañía, derivada de la maestra. */
   semilla: number
   enEjecucion: boolean
+  modo: Modo
+  caja: number
+  ingresos: number
+  costos: number
+  /** Si la caja bajó de 0: la compañía no opera y sus acciones responden 409. */
+  enQuiebra: boolean
   maquinas: Maquina[]
   /** Cola FIFO: el primero es el siguiente en clasificarse. */
   eventos: EventoFallo[]
   tecnicos: Tecnico[]
-  /** Cola FIFO: el primero recibe la siguiente orden. */
-  tecnicosLibres: string[]
+  /** Dos colas FIFO, una por especialidad: en cada una, el primero recibe la siguiente orden. */
+  tecnicosLibres: Record<TipoFallo, string[]>
   colaPrioridad: ColaPrioridad
   /** Pila: el primero es la cima. */
   pilaDeshacer: string[]
@@ -144,7 +196,7 @@ export interface EstadoPlanta {
   bitacora: string[]
 }
 
-/** Totales de una compañía: un elemento de `GET /api/companias`. */
+/** Totales de una compañía: un elemento de `GET /api/companias` y de `ResumenPartida`. */
 export interface ResumenCompania {
   id: number
   nombre: string
@@ -154,6 +206,102 @@ export interface ResumenCompania {
   eventosPendientes: number
   ordenesPendientes: number
   tecnicosLibres: number
+  caja: number
+  ingresos: number
+  costos: number
+  /** Órdenes P1 a P3. */
+  numeroFallos: number
+  /** Fracción del tiempo en que las máquinas produjeron, de 0 a 1. */
+  disponibilidad: number
+  enQuiebra: boolean
+}
+
+/** Un tipo del catálogo, para el formulario de crear máquina. */
+export interface TipoMaquinaCatalogo {
+  tipo: TipoMaquina
+  descripcion: string
+  /** Sirve para sugerir la etiqueta siguiente, por ejemplo `TORNO-02`. */
+  prefijo: string
+}
+
+// ---------------------------------------------------------------------------------------------
+// Superusuario: ranking, overhauls e historial
+// ---------------------------------------------------------------------------------------------
+
+/** Una máquina en el ranking, identificada por `(idCompania, indice)`. */
+export interface EntradaRanking {
+  posicion: number
+  idCompania: number
+  nombreCompania: string
+  indice: number
+  etiqueta: string
+  tipo: TipoMaquina
+  estado: EstadoMaquina
+  puntajeFallos: number
+  numeroOverhauls: number
+  recomendacion: Recomendacion
+}
+
+/** Respuesta de `GET /api/ranking`: un árbol rojo-negro recorrido en orden. */
+export interface Ranking {
+  /** `"Global"` o el nombre de la compañía. */
+  alcance: string
+  umbralOverhaul: number
+  maximoOverhauls: number
+  maquinas: EntradaRanking[]
+}
+
+/** Una solicitud de overhaul; la clave del montículo es `puntajeCongelado`, y `secuencia` desempata. */
+export interface SolicitudOverhaul {
+  idCompania: number
+  nombreCompania: string
+  indiceMaquina: number
+  etiqueta: string
+  puntajeCongelado: number
+  secuencia: number
+  tickAprobacion: number
+}
+
+/** Técnico del fabricante, compartido por todas las compañías. */
+export interface TecnicoExterno {
+  nombre: string
+  libre: boolean
+  solicitudActual: SolicitudOverhaul | null
+  ticksRestantes: number
+}
+
+/**
+ * Respuesta de `/api/overhauls`. El montículo no se manda como árbol (`PriorityQueue` no expone su
+ * arreglo): llegan la cima y el orden de salida.
+ */
+export interface EstadoOverhauls {
+  modo: Modo
+  /** La solicitud que sale primero, o `null` si no hay. */
+  cima: SolicitudOverhaul | null
+  /** De la primera a la última en salir; la primera es la cima. */
+  ordenDeSalida: SolicitudOverhaul[]
+  tecnicos: TecnicoExterno[]
+  /** Cola FIFO: el primero recibe el próximo overhaul. */
+  tecnicosLibres: string[]
+  duracionOverhaul: number
+  costoOverhaul: number
+  costoReemplazo: number
+}
+
+/**
+ * Respuesta de `GET /api/historial`. El total y el pico los calcula el árbol de segmentos del backend;
+ * las series son para dibujar la gráfica: `fallosPorTick[i]` es el del tick `desde + i`.
+ */
+export interface Historial {
+  alcance: string
+  desde: number
+  hasta: number
+  totalFallos: number
+  picoFallos: number
+  totalCosto: number
+  picoCosto: number
+  fallosPorTick: number[]
+  costoPorTick: number[]
 }
 
 /** Cuerpo de todas las respuestas de error (400, 404, 409). */
