@@ -11,6 +11,8 @@ function App() {
   const [idCompania, setIdCompania] = useState(0)
   /** Índice de la máquina seleccionada en el inventario, o `null`. */
   const [seleccionada, setSeleccionada] = useState<number | null>(null)
+  /** Sensor que se dibuja en la cola circular de la máquina seleccionada. */
+  const [sensorVista, setSensorVista] = useState(0)
   const estado = usePlanta(idCompania)
   const { planta } = estado
 
@@ -21,9 +23,20 @@ function App() {
     setSeleccionada(null)
   }
 
+  /** Cada máquina tiene sus propios sensores: al cambiar de máquina se vuelve al primero. */
+  function seleccionarMaquina(indice: number | null) {
+    setSeleccionada(indice)
+    setSensorVista(0)
+  }
+
   return (
     <>
-      <Escena maquinas={planta?.maquinas ?? []} seleccionada={seleccionada} seleccionar={setSeleccionada} />
+      <Escena
+        maquinas={planta?.maquinas ?? []}
+        seleccionada={seleccionada}
+        seleccionar={seleccionarMaquina}
+        sensorVista={sensorVista}
+      />
       <Hud
         planta={planta}
         companias={estado.companias}
@@ -42,7 +55,9 @@ function App() {
           key={`${planta.idCompania}-${maquina.indice}`}
           maquina={maquina}
           bloqueada={planta.enQuiebra}
-          cerrar={() => setSeleccionada(null)}
+          cerrar={() => seleccionarMaquina(null)}
+          sensorVista={sensorVista}
+          seleccionarSensor={setSensorVista}
           inyectarFallo={(sensor, magnitud) => estado.inyectarFallo(maquina.indice, sensor, magnitud)}
           pararOArrancar={() => estado.pararOArrancar(maquina.indice)}
           cambiarCarga={(carga) => estado.cambiarCarga(maquina.indice, carga)}

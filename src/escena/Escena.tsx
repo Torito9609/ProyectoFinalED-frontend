@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { useRef } from 'react'
 import type { Maquina } from '../api/tipos'
+import { AnilloLecturas } from './AnilloLecturas'
 import { MaquinaModelo } from './MaquinaModelo'
 import './escena.css'
 
@@ -30,6 +31,8 @@ interface PropsEscena {
   /** Índice de la máquina seleccionada, o `null`. */
   seleccionada: number | null
   seleccionar: (indice: number | null) => void
+  /** Sensor cuyos valores colorean la cola circular de la máquina seleccionada. */
+  sensorVista: number
 }
 
 /**
@@ -38,10 +41,12 @@ interface PropsEscena {
  * La cámara es ortográfica (sin perspectiva) y mira al origen desde la diagonal (1, 1, 1): esa es la
  * vista isométrica. No hay controles de cámara: el diorama siempre se ve igual.
  *
- * Un clic en una máquina la selecciona; un clic en el vacío quita la selección.
+ * Un clic en una máquina la selecciona y muestra su cola circular en el piso; un clic en el vacío quita
+ * la selección.
  */
-export function Escena({ maquinas, seleccionada, seleccionar }: PropsEscena) {
+export function Escena({ maquinas, seleccionada, seleccionar, sensorVista }: PropsEscena) {
   const filas = Math.max(1, Math.ceil(maquinas.length / COLUMNAS))
+  const maquinaSeleccionada = seleccionada === null ? undefined : maquinas[seleccionada]
   /**
    * Contenedor fijo para las etiquetas HTML. Sin él, cada etiqueta (`Html` de drei) elige su contenedor
    * al montarse y lo cambia cuando React Three Fiber conecta sus eventos; al cambiarlo rehace su raíz de
@@ -80,11 +85,18 @@ export function Escena({ maquinas, seleccionada, seleccionar }: PropsEscena) {
               key={maquina.indice}
               maquina={maquina}
               posicion={posicionDe(maquina.indice, maquinas.length)}
-              seleccionada={maquina.indice === seleccionada}
-              alSeleccionar={() => seleccionar(maquina.indice)}
+                alSeleccionar={() => seleccionar(maquina.indice)}
               capaEtiquetas={capaEtiquetas}
             />
           ))}
+        {maquinaSeleccionada && (
+          <AnilloLecturas
+            cola={maquinaSeleccionada.lecturas}
+            sensor={maquinaSeleccionada.sensores[sensorVista]}
+            indiceSensor={sensorVista}
+            posicion={posicionDe(maquinaSeleccionada.indice, maquinas.length)}
+          />
+        )}
         </group>
       </Canvas>
     </div>

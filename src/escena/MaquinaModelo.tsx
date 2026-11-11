@@ -10,7 +10,6 @@ import { COLOR_ESTADO, NOMBRE_ESTADO } from '../colores'
 interface PropsMaquinaModelo {
   maquina: Maquina
   posicion: [number, number, number]
-  seleccionada: boolean
   alSeleccionar: () => void
   /** Contenedor fijo donde se agrega la etiqueta HTML (ver `Escena`). */
   capaEtiquetas: RefObject<HTMLDivElement | null>
@@ -22,10 +21,10 @@ interface PropsMaquinaModelo {
  * En EN_ALARMA la baliza parpadea. Encima lleva la etiqueta con su índice en el inventario
  * (`[0] PRENSA-01`), porque las máquinas se identifican por su posición en el `ArrayList`.
  *
- * Al hacer clic se selecciona, y la seleccionada lleva un anillo blanco en el piso.
+ * Al hacer clic se selecciona; la escena dibuja entonces su cola circular alrededor de ella.
  */
 export function MaquinaModelo(props: PropsMaquinaModelo) {
-  const { maquina, posicion, seleccionada, alSeleccionar, capaEtiquetas } = props
+  const { maquina, posicion, alSeleccionar, capaEtiquetas } = props
   const baliza = useRef<MeshStandardMaterial>(null)
   const color = COLOR_ESTADO[maquina.estado]
   const enAlarma = maquina.estado === 'EN_ALARMA'
@@ -49,13 +48,6 @@ export function MaquinaModelo(props: PropsMaquinaModelo) {
       onPointerOver={() => (document.body.style.cursor = 'pointer')}
       onPointerOut={() => (document.body.style.cursor = 'auto')}
     >
-      {/* Anillo de selección */}
-      {seleccionada && (
-        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.85, 2.05, 48]} />
-          <meshBasicMaterial color="#ffffff" />
-        </mesh>
-      )}
       {/* Base */}
       <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
         <boxGeometry args={[2.4, 0.3, 2.4]} />

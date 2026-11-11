@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import type { Magnitud, Maquina } from '../api/tipos'
 import { COLOR_ESTADO, NOMBRE_ESTADO, NOMBRE_TIPO_FALLO, colorLectura } from '../colores'
+import { ColaCircularHud } from './ColaCircularHud'
 
 interface PropsPanelMaquina {
   maquina: Maquina
   /** La compañía está en quiebra: no acepta acciones. */
   bloqueada: boolean
   cerrar: () => void
+  /** Sensor que se dibuja en la cola circular. */
+  sensorVista: number
+  seleccionarSensor: (indice: number) => void
   inyectarFallo: (indiceSensor: number, magnitud: Magnitud) => void
   pararOArrancar: () => void
   cambiarCarga: (carga: number) => void
@@ -86,6 +90,14 @@ export function PanelMaquina(props: PropsPanelMaquina) {
           })}
         </tbody>
       </table>
+
+      <div className="seccion">Cola circular de lecturas</div>
+      <ColaCircularHud
+        cola={maquina.lecturas}
+        sensores={maquina.sensores}
+        indiceSensor={props.sensorVista}
+        seleccionarSensor={props.seleccionarSensor}
+      />
 
       <div className="seccion">Carga</div>
       <div className="fila">

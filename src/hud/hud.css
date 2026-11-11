@@ -220,3 +220,48 @@
 .panel-maquina .fila input[type='range'] {
   flex: 1;
 }
+
+/* Cola circular en el HUD */
+.cola-circular .anillo {
+  display: block;
+  width: 260px;
+  height: 260px;
+  margin: 4px auto;
+}
+
+.cola-circular text {
+  text-anchor: middle;
+  font-family: var(--mono);
+}
+
+.cola-circular .valor-celda {
+  font-size: 9.5px;
+  font-weight: bold;
+  fill: #11161d;
+}
+
+.cola-circular .indice-celda {
+  font-size: 11px;
+  fill: var(--texto-suave);
+}
+
+.cola-circular .puntero {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.cola-circular .centro {
+  font-size: 13px;
+  fill: var(--texto);
+}
+
+.cola-circular .centro.suave {
+  font-size: 11px;
+  fill: var(--texto-suave);
+}
+
+.cola-circular .nota {
+  margin-top: 4px;
+  color: var(--texto-suave);
+  font-size: 12px;
+}

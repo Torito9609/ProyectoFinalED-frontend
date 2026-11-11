@@ -52,3 +52,10 @@ export const NOMBRE_TIPO_FALLO: Record<TipoFallo, string> = {
   MECANICO: 'Mecánico',
   ELECTRICO: 'Eléctrico',
 }
+
+/** Celda vacía de la cola circular. */
+export const COLOR_CELDA_VACIA = '#2c3644'
+/** Puntero `frente` de la cola circular: la lectura más antigua, la que se sobrescribe al llenarse. */
+export const COLOR_FRENTE = '#ffffff'
+/** Puntero `final` de la cola circular: la celda donde se escribirá la próxima lectura. */
+export const COLOR_FINAL = '#22d3ee'
