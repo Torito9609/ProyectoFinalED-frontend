@@ -1,11 +1,13 @@
 import { Canvas } from '@react-three/fiber'
 import { useRef } from 'react'
-import type { ColaPrioridad, EventoFallo, Maquina } from '../api/tipos'
+import type { ColaPrioridad, EventoFallo, Maquina, Tecnico, TipoFallo } from '../api/tipos'
 import { AnilloLecturas } from './AnilloLecturas'
 import { BandaEventos } from './BandaEventos'
 import { CapaEtiquetas } from './capaEtiquetas'
 import { MaquinaModelo } from './MaquinaModelo'
+import { PilaDeshacer } from './PilaDeshacer'
 import { TableroPrioridad } from './TableroPrioridad'
+import { Tecnicos } from './Tecnicos'
 import './escena.css'
 
 /** Máquinas por fila en el piso. */
@@ -35,6 +37,10 @@ interface PropsEscena {
   maquinas: Maquina[]
   eventos: EventoFallo[]
   colaPrioridad: ColaPrioridad | null
+  tecnicos: Tecnico[]
+  tecnicosLibres: Record<TipoFallo, string[]>
+  /** Pila de deshacer; la primera es la cima. */
+  pilaDeshacer: string[]
   /** Índice de la máquina seleccionada, o `null`. */
   seleccionada: number | null
   seleccionar: (indice: number | null) => void
@@ -49,7 +55,8 @@ interface PropsEscena {
  * vista isométrica. No hay controles de cámara: el diorama siempre se ve igual.
  *
  * Distribución: las máquinas en una cuadrícula; detrás, la banda de eventos, que termina en el
- * clasificador; a la derecha, el tablero P1–P4, que empieza junto al clasificador. Todo se calcula a partir
+ * clasificador; a la derecha, el tablero P1–P4, que empieza junto al clasificador y termina en las bancas
+ * de los técnicos; a la izquierda, el escritorio con la pila de deshacer. Todo se calcula a partir
  * del tamaño de la cuadrícula, así sigue en su lugar si se crean máquinas.
  *
  * Un clic en una máquina la selecciona y muestra su cola circular en el piso; un clic en el vacío quita
@@ -57,6 +64,7 @@ interface PropsEscena {
  */
 export function Escena(props: PropsEscena) {
   const { maquinas, eventos, colaPrioridad, seleccionada, seleccionar, sensorVista } = props
+  const { tecnicos, tecnicosLibres, pilaDeshacer } = props
   const filas = Math.max(1, Math.ceil(maquinas.length / COLUMNAS))
   const maquinaSeleccionada = seleccionada === null ? undefined : maquinas[seleccionada]
   /** Contenedor fijo para las etiquetas HTML (ver `CapaEtiquetas`). */
@@ -68,8 +76,11 @@ export function Escena(props: PropsEscena) {
   // Banda de eventos detrás de las máquinas; tablero a la derecha.
   const zBanda = -mitadZ - 2
   const xTablero = mitadX + 1.4
+  // Bancas de los técnicos a la salida del tablero; escritorio a la izquierda.
+  const zBanca: Record<TipoFallo, number> = { MECANICO: mitadZ + 1.8, ELECTRICO: mitadZ + 3.1 }
+  const posicionEscritorio: [number, number, number] = [-mitadX - 2, 0, 0]
   // Piso que cubre todo, y desplazamiento que lo centra en pantalla.
-  const piso = { xMin: -mitadX - 1, xMax: xTablero + ANCHO_TABLERO, zMin: zBanda - 1.2, zMax: mitadZ + 1.5 }
+  const piso = { xMin: -mitadX - 3.2, xMax: xTablero + ANCHO_TABLERO, zMin: zBanda - 1.2, zMax: mitadZ + 4.2 }
   const centroX = (piso.xMin + piso.xMax) / 2
   const centroZ = (piso.zMin + piso.zMax) / 2
 
@@ -120,6 +131,14 @@ export function Escena(props: PropsEscena) {
             {colaPrioridad && (
               <TableroPrioridad cola={colaPrioridad} x={xTablero} zEntrada={zBanda + 0.7} zSalida={mitadZ} />
             )}
+            <Tecnicos
+              tecnicos={tecnicos}
+              tecnicosLibres={tecnicosLibres}
+              xFrente={xTablero}
+              zBanca={zBanca}
+              posicionMaquina={(indice) => posicionDe(indice, maquinas.length)}
+            />
+            <PilaDeshacer acciones={pilaDeshacer} posicion={posicionEscritorio} />
           </group>
         </Canvas>
       </CapaEtiquetas.Provider>

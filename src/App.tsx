@@ -35,6 +35,9 @@ function App() {
         maquinas={planta?.maquinas ?? []}
         eventos={planta?.eventos ?? []}
         colaPrioridad={planta?.colaPrioridad ?? null}
+        tecnicos={planta?.tecnicos ?? []}
+        tecnicosLibres={planta?.tecnicosLibres ?? { MECANICO: [], ELECTRICO: [] }}
+        pilaDeshacer={planta?.pilaDeshacer ?? []}
         seleccionada={seleccionada}
         seleccionar={seleccionarMaquina}
         sensorVista={sensorVista}

@@ -59,3 +59,9 @@ export const COLOR_CELDA_VACIA = '#2c3644'
 export const COLOR_FRENTE = '#ffffff'
 /** Puntero `final` de la cola circular: la celda donde se escribirá la próxima lectura. */
 export const COLOR_FINAL = '#22d3ee'
+
+/** Color de cada especialidad, para las figuras de los técnicos. */
+export const COLOR_ESPECIALIDAD: Record<TipoFallo, string> = {
+  MECANICO: '#d6a26b',
+  ELECTRICO: '#5eead4',
+}
