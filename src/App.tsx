@@ -3,7 +3,9 @@ import { Escena } from './escena/Escena'
 import { usePlanta } from './estado/usePlanta'
 import { Bitacora } from './hud/Bitacora'
 import { Hud } from './hud/Hud'
+import { PanelJuego } from './hud/PanelJuego'
 import { PanelMaquina } from './hud/PanelMaquina'
+import { ResumenPartida } from './hud/ResumenPartida'
 import './hud/hud.css'
 
 /** Raíz de la aplicación: la escena 3D de la compañía seleccionada de fondo y el HUD encima. */
@@ -44,6 +46,7 @@ function App() {
       />
       <Hud
         planta={planta}
+        simulacion={estado.simulacion}
         companias={estado.companias}
         idCompania={idCompania}
         seleccionarCompania={seleccionarCompania}
@@ -54,6 +57,8 @@ function App() {
         paso={estado.paso}
         reiniciar={estado.reiniciar}
         deshacer={estado.deshacer}
+        cambiarModo={estado.cambiarModo}
+        verResumen={estado.verResumen}
       />
       {planta && maquina && (
         <PanelMaquina
@@ -69,6 +74,23 @@ function App() {
         />
       )}
       {planta && <Bitacora lineas={planta.bitacora} />}
+      {planta && (
+        <PanelJuego
+          planta={planta}
+          clasificarSiguiente={estado.clasificarSiguiente}
+          asignarSiguiente={estado.asignarSiguiente}
+        />
+      )}
+      {estado.resumen && (
+        <ResumenPartida
+          resumen={estado.resumen}
+          cerrar={estado.cerrarResumen}
+          reiniciar={() => {
+            estado.cerrarResumen()
+            estado.reiniciar()
+          }}
+        />
+      )}
     </>
   )
 }

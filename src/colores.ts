@@ -1,4 +1,4 @@
-import type { EstadoMaquina, Prioridad, Sensor, TipoFallo } from './api/tipos'
+import type { EstadoMaquina, Modo, Prioridad, Sensor, TipoFallo } from './api/tipos'
 
 /**
  * Paleta única del frontend. Ningún componente escribe un color de estado o de prioridad a mano:
@@ -45,6 +45,12 @@ export function colorLectura(valor: number, sensor: Sensor): string {
   if (valor >= sensor.umbralAlto) return COLOR_PRIORIDAD.P2
   if (valor >= sensor.umbralAdvertencia) return COLOR_PRIORIDAD.P3
   return COLOR_NORMAL
+}
+
+/** Texto de cada modo de la simulación. */
+export const NOMBRE_MODO: Record<Modo, string> = {
+  AUTOMATICO: 'Automático',
+  MANUAL: 'Manual',
 }
 
 /** Texto de cada tipo de fallo, que es también la especialidad de un técnico. */

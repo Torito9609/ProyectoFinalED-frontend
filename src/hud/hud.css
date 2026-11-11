@@ -265,3 +265,201 @@
   color: var(--texto-suave);
   font-size: 12px;
 }
+
+/* Interruptor de modo en la barra */
+.barra .interruptor {
+  display: flex;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barra .interruptor button {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--texto-suave);
+}
+
+.barra .interruptor button.activa {
+  background: #3b8eea;
+  color: #ffffff;
+}
+
+/* Panel del juego: economía y botones del modo manual */
+.panel-juego {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: min(340px, calc(100% - 24px));
+  z-index: 10;
+  font-size: 13px;
+}
+
+.panel-juego,
+.modal {
+  --fondo-boton: #2c3644;
+}
+
+.panel-juego button,
+.modal button {
+  font: inherit;
+  color: var(--texto);
+  background: var(--fondo-boton);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.panel-juego button:hover:not(:disabled),
+.modal button:hover:not(:disabled) {
+  background: #3a4656;
+}
+
+.panel-juego button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.panel-juego > button {
+  width: 100%;
+}
+
+.panel-juego .fila {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.panel-juego .fila button {
+  flex: 1;
+}
+
+/* Botón de la especialidad que no corresponde a la orden siguiente: tarda el doble. */
+.panel-juego button.penalidad:not(:disabled) {
+  border-color: #f5a524;
+}
+
+.panel-juego .datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+}
+
+.panel-juego .datos dt {
+  color: var(--texto-suave);
+}
+
+.panel-juego .datos dd {
+  margin: 0;
+  font-family: var(--mono);
+  text-align: right;
+}
+
+.panel-juego .seccion {
+  margin: 10px 0 6px;
+  font-weight: bold;
+  border-top: 1px solid var(--borde);
+  padding-top: 6px;
+}
+
+.panel-juego .pista {
+  margin-top: 6px;
+  color: var(--texto-suave);
+  font-size: 12px;
+}
+
+.fuerte {
+  font-weight: bold;
+}
+
+.negativo {
+  color: #ff8b8b;
+  font-weight: bold;
+}
+
+.quiebra {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: #ffd7d7;
+  background: rgba(150, 30, 30, 0.85);
+  border: 1px solid #d64545;
+  font-weight: bold;
+}
+
+/* Ventana del resumen de la partida */
+.fondo-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 13, 18, 0.6);
+}
+
+.modal {
+  width: min(760px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  padding: 16px;
+}
+
+.modal .encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: bold 17px var(--sans);
+}
+
+.modal .suave {
+  color: var(--texto-suave);
+  margin-bottom: 10px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla th,
+.tabla td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--borde);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tabla th:first-child,
+.tabla td:first-child {
+  text-align: left;
+}
+
+.tabla td {
+  font-family: var(--mono);
+}
+
+.tabla th {
+  color: var(--texto-suave);
+  font-weight: normal;
+}
+
+.etiqueta-quiebra {
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #ffd7d7;
+  background: rgba(150, 30, 30, 0.85);
+}
+
+.modal .fila.derecha {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}

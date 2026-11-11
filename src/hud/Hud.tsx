@@ -1,7 +1,9 @@
-import type { EstadoPlanta, ResumenCompania } from '../api/tipos'
+import type { EstadoPlanta, EstadoSimulacion, Modo, ResumenCompania } from '../api/tipos'
+import { NOMBRE_MODO } from '../colores'
 
 interface PropsHud {
   planta: EstadoPlanta | null
+  simulacion: EstadoSimulacion | null
   companias: ResumenCompania[]
   idCompania: number
   seleccionarCompania: (id: number) => void
@@ -12,14 +14,18 @@ interface PropsHud {
   paso: () => void
   reiniciar: () => void
   deshacer: () => void
+  cambiarModo: (modo: Modo) => void
+  verResumen: () => void
 }
 
+const MODOS: Modo[] = ['AUTOMATICO', 'MANUAL']
+
 /**
- * Barra superior: controles de la simulación, tick y semilla, deshacer, y debajo una pestaña por
- * compañía. Si el backend no responde, muestra el error al final; si una acción se rechazó, su aviso.
+ * Barra superior: controles de la simulación, el interruptor de modo, tick y semilla, deshacer y el
+ * resumen de la partida, y debajo una pestaña por compañía. Si el backend no responde, muestra el error al final; si una acción se rechazó, su aviso.
  */
 export function Hud(props: PropsHud) {
-  const { planta, companias, idCompania, seleccionarCompania, error, aviso } = props
+  const { planta, simulacion, companias, idCompania, seleccionarCompania, error, aviso } = props
 
   return (
     <div className="hud-superior">
@@ -41,8 +47,21 @@ export function Hud(props: PropsHud) {
             >
               ↶ Deshacer ({planta.pilaDeshacer.length})
             </button>
+            <button onClick={props.verResumen}>Resumen</button>
+            <div className="interruptor" title="El tiempo sigue corriendo al cambiar de modo">
+              {MODOS.map((modo) => (
+                <button
+                  key={modo}
+                  className={planta.modo === modo ? 'activa' : ''}
+                  onClick={() => planta.modo !== modo && props.cambiarModo(modo)}
+                >
+                  {NOMBRE_MODO[modo]}
+                </button>
+              ))}
+            </div>
             <span className="dato">
               Tick <b>{planta.tick}</b>
+              {simulacion && ` / ${simulacion.duracionPartida}`}
             </span>
             <span className="dato">
               Semilla <b>{planta.semilla}</b>

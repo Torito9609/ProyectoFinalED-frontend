@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as api from '../api/cliente'
-import type { EstadoPlanta, Magnitud, ResumenCompania } from '../api/tipos'
+import type {
+  EstadoPlanta,
+  EstadoSimulacion,
+  Magnitud,
+  Modo,
+  ResumenCompania,
+  ResumenPartida,
+  TipoFallo,
+} from '../api/tipos'
 
 /** Cada cuánto se pide el estado al backend (ms). */
 const INTERVALO_SONDEO_MS = 500
@@ -32,12 +40,18 @@ function mensajeDe(error: unknown): string {
  * La lista de compañías se pide una sola vez al arrancar (reintentando si el backend no está): las
  * compañías no cambian solas.
  *
+ * Cada ciclo pide también el estado de la simulación (modo y fin de la partida), en paralelo con la
+ * compañía. Cuando la partida termina, pide el resumen una vez para mostrarlo.
+ *
  * Hay dos mensajes distintos: `error` es del sondeo (el backend no responde) y se borra solo cuando
  * vuelve a responder; `aviso` es de una acción rechazada (por ejemplo un 409) y dura unos segundos,
  * porque si fuera el mismo campo, el siguiente sondeo lo borraría al medio segundo.
  */
 export function usePlanta(idCompania: number) {
   const [planta, setPlanta] = useState<EstadoPlanta | null>(null)
+  const [simulacion, setSimulacion] = useState<EstadoSimulacion | null>(null)
+  /** Resumen de la partida que se está mostrando, o `null` si la ventana está cerrada. */
+  const [resumen, setResumen] = useState<ResumenPartida | null>(null)
   const [companias, setCompanias] = useState<ResumenCompania[]>([])
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -46,11 +60,12 @@ export function usePlanta(idCompania: number) {
   /** La compañía que se está viendo ahora, para descartar respuestas de la anterior. */
   const idActual = useRef(idCompania)
 
-  /** Pide el estado de la compañía una vez. */
+  /** Pide el estado de la compañía y el de la simulación una vez. */
   const refrescar = useCallback(async () => {
     try {
-      const estado = await api.obtenerCompania(idCompania)
+      const [estado, sim] = await Promise.all([api.obtenerCompania(idCompania), api.obtenerSimulacion()])
       if (estado.idCompania === idActual.current) setPlanta(estado)
+      setSimulacion(sim)
       setError(null)
     } catch (e) {
       setError(mensajeDe(e))
@@ -74,6 +89,18 @@ export function usePlanta(idCompania: number) {
       window.clearTimeout(temporizador)
     }
   }, [idCompania, refrescar])
+
+  // Al terminar la partida se muestra su resumen, una sola vez (reiniciar vuelve a dejar la marca en falso).
+  const partidaTerminada = simulacion?.partidaTerminada ?? false
+  useEffect(() => {
+    if (!partidaTerminada) return
+    api
+      .obtenerResumenPartida()
+      .then(setResumen)
+      .catch(() => {
+        // Si falla, el usuario lo puede abrir a mano con el botón Resumen.
+      })
+  }, [partidaTerminada])
 
   // Lista de compañías, una vez al arrancar.
   useEffect(() => {
@@ -136,8 +163,21 @@ export function usePlanta(idCompania: number) {
     [avisar],
   )
 
+  /** Abre la ventana del resumen de la partida, aunque no haya terminado. */
+  const verResumen = useCallback(async () => {
+    try {
+      setResumen(await api.obtenerResumenPartida())
+    } catch (e) {
+      avisar(mensajeDe(e))
+    }
+  }, [avisar])
+
   return {
     planta,
+    simulacion,
+    resumen,
+    verResumen,
+    cerrarResumen: () => setResumen(null),
     companias,
     error,
     aviso,
@@ -151,5 +191,9 @@ export function usePlanta(idCompania: number) {
     cambiarCarga: (indice: number, carga: number) =>
       accionPlanta(() => api.cambiarCarga(idCompania, indice, carga)),
     deshacer: () => accionPlanta(() => api.deshacer(idCompania)),
+    cambiarModo: (modo: Modo) => ejecutar(() => api.cambiarModo(modo)),
+    clasificarSiguiente: () => accionPlanta(() => api.clasificarSiguiente(idCompania)),
+    asignarSiguiente: (especialidad: TipoFallo) =>
+      accionPlanta(() => api.asignarSiguiente(idCompania, especialidad)),
   }
 }
