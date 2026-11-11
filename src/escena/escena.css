@@ -49,3 +49,10 @@
   background: #ffffff;
   font-weight: bold;
 }
+
+/* Marca del frente de una cola (las bancas de técnicos). */
+.etiqueta-frente {
+  color: #11161d;
+  background: #ffffff;
+  font-weight: bold;
+}

@@ -163,6 +163,15 @@ export function usePlanta(idCompania: number) {
     [avisar],
   )
 
+  /** Vuelve a pedir la lista de compañías, por ejemplo después de crear una. */
+  const recargarCompanias = useCallback(async () => {
+    try {
+      setCompanias(await api.listarCompanias())
+    } catch (e) {
+      avisar(mensajeDe(e))
+    }
+  }, [avisar])
+
   /** Abre la ventana del resumen de la partida, aunque no haya terminado. */
   const verResumen = useCallback(async () => {
     try {
@@ -179,6 +188,7 @@ export function usePlanta(idCompania: number) {
     verResumen,
     cerrarResumen: () => setResumen(null),
     companias,
+    recargarCompanias,
     error,
     aviso,
     iniciar: () => ejecutar(api.iniciar),

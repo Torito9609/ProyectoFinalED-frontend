@@ -16,7 +16,12 @@ interface PropsHud {
   deshacer: () => void
   cambiarModo: (modo: Modo) => void
   verResumen: () => void
+  vista: Vista
+  cambiarVista: (vista: Vista) => void
 }
+
+/** Las dos vistas: el diorama de una compañía o el dashboard del superusuario. */
+export type Vista = 'COMPANIA' | 'SUPERUSUARIO'
 
 const MODOS: Modo[] = ['AUTOMATICO', 'MANUAL']
 
@@ -31,6 +36,17 @@ export function Hud(props: PropsHud) {
     <div className="hud-superior">
       <div className="panel barra">
         <strong className="titulo">Simulador de Planta</strong>
+        <div className="interruptor">
+          <button className={props.vista === 'COMPANIA' ? 'activa' : ''} onClick={() => props.cambiarVista('COMPANIA')}>
+            Compañía
+          </button>
+          <button
+            className={props.vista === 'SUPERUSUARIO' ? 'activa' : ''}
+            onClick={() => props.cambiarVista('SUPERUSUARIO')}
+          >
+            Superusuario
+          </button>
+        </div>
         {planta ? (
           <>
             {planta.enEjecucion ? (
@@ -71,7 +87,7 @@ export function Hud(props: PropsHud) {
           <span className="dato">Conectando…</span>
         )}
       </div>
-      {companias.length > 0 && (
+      {props.vista === 'COMPANIA' && companias.length > 0 && (
         <div className="panel pestanas">
           {companias.map((compania) => (
             <button

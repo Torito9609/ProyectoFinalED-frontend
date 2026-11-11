@@ -7,19 +7,27 @@ interface PropsTecnicos {
   tecnicos: Tecnico[]
   /** Las dos colas FIFO de técnicos libres: el primero de cada lista recibe la siguiente orden. */
   tecnicosLibres: Record<TipoFallo, string[]>
-  /** Extremo de las bancas donde está el frente de cada cola (x). */
-  xFrente: number
-  /** Línea de la banca de cada especialidad (z). */
-  zBanca: Record<TipoFallo, number>
+  /** Puesto del frente de la banca de cada especialidad, en el piso (x, z). */
+  frenteBanca: Record<TipoFallo, [number, number]>
   /** Centro de la máquina con el índice dado, para poner a su lado al técnico que la repara. */
   posicionMaquina: (indice: number) => [number, number, number]
 }
 
-/** Distancia entre dos técnicos sentados en la banca. */
-const PASO = 1
-/** Largo de cada banca. */
-const LARGO_BANCA = 4
+/** Distancia entre dos puestos de la banca. */
+const PASO = 1.2
+/** Puestos que se dibujan en cada banca. */
+const PUESTOS = 3
+/**
+ * Dirección de la fila: (1, 0, −1) normalizada. En la vista isométrica es la horizontal de la pantalla,
+ * así cada cola se lee de izquierda a derecha, con el frente a la izquierda.
+ */
+const FILA: [number, number] = [Math.SQRT1_2, -Math.SQRT1_2]
 const ESPECIALIDADES: TipoFallo[] = ['MECANICO', 'ELECTRICO']
+
+/** Punto del piso del puesto `i` de una banca que empieza en `frente`. */
+function puesto(frente: [number, number], i: number): [number, number, number] {
+  return [frente[0] + i * PASO * FILA[0], 0, frente[1] + i * PASO * FILA[1]]
+}
 
 /** Una figura sencilla: cuerpo y cabeza. */
 function Figura({ color }: { color: string }) {
@@ -38,29 +46,38 @@ function Figura({ color }: { color: string }) {
 }
 
 /**
- * Las dos colas FIFO de técnicos internos, una por especialidad, como dos bancas.
+ * Las dos colas FIFO de técnicos internos, una por especialidad, como dos bancas en fila.
  *
- * Los libres se sientan en su banca en el orden de la cola: el frente, junto a los carriles P1–P4, es el
- * que recibe la siguiente orden de su especialidad. El que está ocupado camina a la máquina que repara y
- * se queda a su lado con su orden y los ticks que le faltan (×2 si es de la otra especialidad). Al
- * terminar vuelve al final de la banca de su especialidad.
+ * Los libres esperan en su banca en el orden de la cola: el de la izquierda (el frente) es el que recibe
+ * la siguiente orden de su especialidad. El que está ocupado camina a la máquina que repara y se queda a
+ * su lado con su orden y los ticks que le faltan (×2 si es de la otra especialidad). Al terminar vuelve al
+ * final de la fila de su especialidad.
  *
  * Cada técnico se identifica por su nombre, así que es la misma figura la que se mueve.
  */
-export function Tecnicos({ tecnicos, tecnicosLibres, xFrente, zBanca, posicionMaquina }: PropsTecnicos) {
+export function Tecnicos({ tecnicos, tecnicosLibres, frenteBanca, posicionMaquina }: PropsTecnicos) {
   return (
     <group>
-      {ESPECIALIDADES.map((especialidad) => (
-        <group key={especialidad}>
-          <mesh position={[xFrente + LARGO_BANCA / 2 - 0.5, 0.12, zBanca[especialidad] + 0.45]} receiveShadow>
-            <boxGeometry args={[LARGO_BANCA, 0.24, 0.35]} />
-            <meshStandardMaterial color="#566173" />
-          </mesh>
-          <Etiqueta posicion={[xFrente + LARGO_BANCA - 0.2, 0.3, zBanca[especialidad] + 0.9]}>
-            {NOMBRE_TIPO_FALLO[especialidad]}s libres (FIFO) · {tecnicosLibres[especialidad].length}
-          </Etiqueta>
-        </group>
-      ))}
+      {ESPECIALIDADES.map((especialidad) => {
+        const frente = frenteBanca[especialidad]
+        const [xMedio, , zMedio] = puesto(frente, (PUESTOS - 1) / 2)
+        const [xFin, , zFin] = puesto(frente, PUESTOS + 0.6)
+        return (
+          <group key={especialidad}>
+            {/* Banca: una tabla a lo largo de la fila, detrás de los puestos */}
+            <mesh position={[xMedio - 0.35, 0.12, zMedio - 0.35]} rotation={[0, Math.PI / 4, 0]} receiveShadow>
+              <boxGeometry args={[PUESTOS * PASO, 0.24, 0.3]} />
+              <meshStandardMaterial color="#566173" />
+            </mesh>
+            <Etiqueta posicion={puesto(frente, -0.9)} className="etiqueta etiqueta-frente">
+              frente
+            </Etiqueta>
+            <Etiqueta posicion={[xFin, 0.2, zFin]}>
+              {NOMBRE_TIPO_FALLO[especialidad]}s libres (FIFO) · {tecnicosLibres[especialidad].length}
+            </Etiqueta>
+          </group>
+        )
+      })}
 
       {tecnicos.map((tecnico) => {
         const color = COLOR_ESPECIALIDAD[tecnico.especialidad]
@@ -70,8 +87,8 @@ export function Tecnicos({ tecnicos, tecnicosLibres, xFrente, zBanca, posicionMa
           const [x, , z] = posicionMaquina(orden.indiceMaquina)
           destino = [x + 1.5, 0, z + 1.5]
         } else {
-          const puesto = tecnicosLibres[tecnico.especialidad].indexOf(tecnico.nombre)
-          destino = [xFrente + puesto * PASO, 0, zBanca[tecnico.especialidad]]
+          const lugar = tecnicosLibres[tecnico.especialidad].indexOf(tecnico.nombre)
+          destino = puesto(frenteBanca[tecnico.especialidad], lugar)
         }
         const penalidad = orden !== null && orden.tipoFallo !== tecnico.especialidad
         return (

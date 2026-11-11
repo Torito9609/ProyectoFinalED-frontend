@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Escena } from './escena/Escena'
 import { usePlanta } from './estado/usePlanta'
 import { Bitacora } from './hud/Bitacora'
+import { Dashboard } from './hud/Dashboard'
 import { Hud } from './hud/Hud'
+import type { Vista } from './hud/Hud'
 import { PanelJuego } from './hud/PanelJuego'
 import { PanelMaquina } from './hud/PanelMaquina'
 import { ResumenPartida } from './hud/ResumenPartida'
@@ -15,6 +17,7 @@ function App() {
   const [seleccionada, setSeleccionada] = useState<number | null>(null)
   /** Sensor que se dibuja en la cola circular de la máquina seleccionada. */
   const [sensorVista, setSensorVista] = useState(0)
+  const [vista, setVista] = useState<Vista>('COMPANIA')
   const estado = usePlanta(idCompania)
   const { planta } = estado
 
@@ -25,6 +28,12 @@ function App() {
     setSeleccionada(null)
   }
 
+  /** Desde el dashboard: abre una compañía en el diorama. */
+  function abrirCompania(id: number) {
+    seleccionarCompania(id)
+    setVista('COMPANIA')
+  }
+
   /** Cada máquina tiene sus propios sensores: al cambiar de máquina se vuelve al primero. */
   function seleccionarMaquina(indice: number | null) {
     setSeleccionada(indice)
@@ -33,17 +42,22 @@ function App() {
 
   return (
     <>
-      <Escena
-        maquinas={planta?.maquinas ?? []}
-        eventos={planta?.eventos ?? []}
-        colaPrioridad={planta?.colaPrioridad ?? null}
-        tecnicos={planta?.tecnicos ?? []}
-        tecnicosLibres={planta?.tecnicosLibres ?? { MECANICO: [], ELECTRICO: [] }}
-        pilaDeshacer={planta?.pilaDeshacer ?? []}
-        seleccionada={seleccionada}
-        seleccionar={seleccionarMaquina}
-        sensorVista={sensorVista}
-      />
+      {vista === 'COMPANIA' && (
+        <Escena
+          maquinas={planta?.maquinas ?? []}
+          eventos={planta?.eventos ?? []}
+          colaPrioridad={planta?.colaPrioridad ?? null}
+          tecnicos={planta?.tecnicos ?? []}
+          tecnicosLibres={planta?.tecnicosLibres ?? { MECANICO: [], ELECTRICO: [] }}
+          pilaDeshacer={planta?.pilaDeshacer ?? []}
+          seleccionada={seleccionada}
+          seleccionar={seleccionarMaquina}
+          sensorVista={sensorVista}
+        />
+      )}
+      {vista === 'SUPERUSUARIO' && (
+        <Dashboard abrirCompania={abrirCompania} companiaCreada={estado.recargarCompanias} />
+      )}
       <Hud
         planta={planta}
         simulacion={estado.simulacion}
@@ -59,8 +73,10 @@ function App() {
         deshacer={estado.deshacer}
         cambiarModo={estado.cambiarModo}
         verResumen={estado.verResumen}
+        vista={vista}
+        cambiarVista={setVista}
       />
-      {planta && maquina && (
+      {vista === 'COMPANIA' && planta && maquina && (
         <PanelMaquina
           key={`${planta.idCompania}-${maquina.indice}`}
           maquina={maquina}
@@ -73,8 +89,8 @@ function App() {
           cambiarCarga={(carga) => estado.cambiarCarga(maquina.indice, carga)}
         />
       )}
-      {planta && <Bitacora lineas={planta.bitacora} />}
-      {planta && (
+      {vista === 'COMPANIA' && planta && <Bitacora lineas={planta.bitacora} />}
+      {vista === 'COMPANIA' && planta && (
         <PanelJuego
           planta={planta}
           clasificarSiguiente={estado.clasificarSiguiente}

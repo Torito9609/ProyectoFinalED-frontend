@@ -77,10 +77,14 @@ export function Escena(props: PropsEscena) {
   const zBanda = -mitadZ - 2
   const xTablero = mitadX + 1.4
   // Bancas de los técnicos a la salida del tablero; escritorio a la izquierda.
-  const zBanca: Record<TipoFallo, number> = { MECANICO: mitadZ + 1.8, ELECTRICO: mitadZ + 3.1 }
+  // Cada banca es una fila horizontal en pantalla; la de eléctricos queda debajo de la de mecánicos.
+  const frenteBanca: Record<TipoFallo, [number, number]> = {
+    MECANICO: [xTablero + 0.8, mitadZ + 4.4],
+    ELECTRICO: [xTablero + 3.2, mitadZ + 6.9],
+  }
   const posicionEscritorio: [number, number, number] = [-mitadX - 2, 0, 0]
   // Piso que cubre todo, y desplazamiento que lo centra en pantalla.
-  const piso = { xMin: -mitadX - 3.2, xMax: xTablero + ANCHO_TABLERO, zMin: zBanda - 1.2, zMax: mitadZ + 4.2 }
+  const piso = { xMin: -mitadX - 3.2, xMax: xTablero + ANCHO_TABLERO, zMin: zBanda - 1.2, zMax: mitadZ + 8.2 }
   const centroX = (piso.xMin + piso.xMax) / 2
   const centroZ = (piso.zMin + piso.zMax) / 2
 
@@ -134,8 +138,7 @@ export function Escena(props: PropsEscena) {
             <Tecnicos
               tecnicos={tecnicos}
               tecnicosLibres={tecnicosLibres}
-              xFrente={xTablero}
-              zBanca={zBanca}
+              frenteBanca={frenteBanca}
               posicionMaquina={(indice) => posicionDe(indice, maquinas.length)}
             />
             <PilaDeshacer acciones={pilaDeshacer} posicion={posicionEscritorio} />

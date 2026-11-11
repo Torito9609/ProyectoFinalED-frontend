@@ -1,4 +1,4 @@
-import type { EstadoMaquina, Modo, Prioridad, Sensor, TipoFallo } from './api/tipos'
+import type { EstadoMaquina, Modo, Prioridad, Recomendacion, Sensor, TipoFallo } from './api/tipos'
 
 /**
  * Paleta única del frontend. Ningún componente escribe un color de estado o de prioridad a mano:
@@ -70,4 +70,11 @@ export const COLOR_FINAL = '#22d3ee'
 export const COLOR_ESPECIALIDAD: Record<TipoFallo, string> = {
   MECANICO: '#d6a26b',
   ELECTRICO: '#5eead4',
+}
+
+/** Color de cada recomendación del ranking. */
+export const COLOR_RECOMENDACION: Record<Recomendacion, string> = {
+  NINGUNA: '#566173',
+  OVERHAUL: '#f5a524',
+  REEMPLAZO: '#e5484d',
 }

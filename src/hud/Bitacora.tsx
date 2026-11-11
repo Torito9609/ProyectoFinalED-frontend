@@ -1,5 +1,5 @@
 /** Cuántas líneas de la bitácora se muestran. */
-const LINEAS_VISIBLES = 15
+const LINEAS_VISIBLES = 8
 
 /**
  * Últimas líneas de la bitácora. El backend las entrega de la más antigua a la más reciente,
