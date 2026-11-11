@@ -109,3 +109,114 @@
 .bitacora .vacio {
   color: var(--texto-suave);
 }
+
+.aviso {
+  color: #fff1d6;
+  background: rgba(140, 90, 10, 0.9);
+  border-color: #f5a524;
+}
+
+/* Botones de todos los paneles del HUD (la barra tiene los suyos). */
+.panel-maquina button,
+.panel-maquina select {
+  font: inherit;
+  color: var(--texto);
+  background: #2c3644;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.panel-maquina button:hover:not(:disabled),
+.barra button:hover:not(:disabled) {
+  background: #3a4656;
+}
+
+.panel-maquina button:disabled,
+.barra button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.panel-maquina {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: min(400px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 11;
+  font-size: 13px;
+}
+
+.panel-maquina .encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: bold 15px var(--mono);
+}
+
+.panel-maquina .indice,
+.panel-maquina .suave {
+  color: var(--texto-suave);
+}
+
+.panel-maquina .cerrar {
+  padding: 0 8px;
+}
+
+.panel-maquina .estado {
+  font-weight: bold;
+  margin: 2px 0 6px;
+}
+
+.panel-maquina .datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+}
+
+.panel-maquina .datos dt {
+  color: var(--texto-suave);
+}
+
+.panel-maquina .datos dd {
+  margin: 0;
+  font-family: var(--mono);
+}
+
+.panel-maquina .seccion {
+  margin: 10px 0 4px;
+  font-weight: bold;
+  border-top: 1px solid var(--borde);
+  padding-top: 6px;
+}
+
+.panel-maquina .sensores {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.panel-maquina .sensores td {
+  padding: 1px 4px 1px 0;
+}
+
+.panel-maquina .valor {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.panel-maquina .fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.panel-maquina .fila input[type='range'] {
+  flex: 1;
+}

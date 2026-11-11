@@ -1,4 +1,4 @@
-import type { EstadoMaquina, Prioridad } from './api/tipos'
+import type { EstadoMaquina, Prioridad, Sensor, TipoFallo } from './api/tipos'
 
 /**
  * Paleta única del frontend. Ningún componente escribe un color de estado o de prioridad a mano:
@@ -31,4 +31,24 @@ export const COLOR_PRIORIDAD: Record<Prioridad, string> = {
   P2: '#f76b15',
   P3: '#f5d90a',
   P4: '#3b8eea',
+}
+
+/** Color de un valor normal, por debajo del umbral de advertencia. */
+const COLOR_NORMAL = '#3ccf6e'
+
+/**
+ * Color de un valor leído según la zona de umbrales de su sensor, con los mismos colores de la
+ * prioridad que le daría el clasificador: ≥ crítico P1, ≥ alto P2, ≥ advertencia P3; debajo, normal.
+ */
+export function colorLectura(valor: number, sensor: Sensor): string {
+  if (valor >= sensor.umbralCritico) return COLOR_PRIORIDAD.P1
+  if (valor >= sensor.umbralAlto) return COLOR_PRIORIDAD.P2
+  if (valor >= sensor.umbralAdvertencia) return COLOR_PRIORIDAD.P3
+  return COLOR_NORMAL
+}
+
+/** Texto de cada tipo de fallo, que es también la especialidad de un técnico. */
+export const NOMBRE_TIPO_FALLO: Record<TipoFallo, string> = {
+  MECANICO: 'Mecánico',
+  ELECTRICO: 'Eléctrico',
 }

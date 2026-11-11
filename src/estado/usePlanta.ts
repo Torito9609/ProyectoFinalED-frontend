@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as api from '../api/cliente'
-import type { EstadoPlanta, ResumenCompania } from '../api/tipos'
+import type { EstadoPlanta, Magnitud, ResumenCompania } from '../api/tipos'
 
 /** Cada cuánto se pide el estado al backend (ms). */
 const INTERVALO_SONDEO_MS = 500
 /** Cada cuánto se reintenta pedir la lista de compañías si falló (ms). */
 const REINTENTO_LISTA_MS = 2000
+/** Cuánto se muestra el aviso de una acción rechazada (ms). */
+const DURACION_AVISO_MS = 4000
 
 /** Convierte cualquier error en un texto para mostrar. */
 function mensajeDe(error: unknown): string {
@@ -29,11 +31,17 @@ function mensajeDe(error: unknown): string {
  *
  * La lista de compañías se pide una sola vez al arrancar (reintentando si el backend no está): las
  * compañías no cambian solas.
+ *
+ * Hay dos mensajes distintos: `error` es del sondeo (el backend no responde) y se borra solo cuando
+ * vuelve a responder; `aviso` es de una acción rechazada (por ejemplo un 409) y dura unos segundos,
+ * porque si fuera el mismo campo, el siguiente sondeo lo borraría al medio segundo.
  */
 export function usePlanta(idCompania: number) {
   const [planta, setPlanta] = useState<EstadoPlanta | null>(null)
   const [companias, setCompanias] = useState<ResumenCompania[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
+  const temporizadorAviso = useRef<number | undefined>(undefined)
 
   /** La compañía que se está viendo ahora, para descartar respuestas de la anterior. */
   const idActual = useRef(idCompania)
@@ -89,8 +97,15 @@ export function usePlanta(idCompania: number) {
     }
   }, [])
 
+  /** Muestra el mensaje de una acción rechazada durante unos segundos. */
+  const avisar = useCallback((mensaje: string) => {
+    window.clearTimeout(temporizadorAviso.current)
+    setAviso(mensaje)
+    temporizadorAviso.current = window.setTimeout(() => setAviso(null), DURACION_AVISO_MS)
+  }, [])
+
   /**
-   * Ejecuta una acción y luego vuelve a pedir la compañía: los controles de la simulación devuelven
+   * Ejecuta un control de la simulación y luego vuelve a pedir la compañía: los controles devuelven
    * `EstadoSimulacion`, no la planta completa.
    */
   const ejecutar = useCallback(
@@ -99,19 +114,42 @@ export function usePlanta(idCompania: number) {
         await accion()
         await refrescar()
       } catch (e) {
-        setError(mensajeDe(e))
+        avisar(mensajeDe(e))
       }
     },
-    [refrescar],
+    [refrescar, avisar],
+  )
+
+  /**
+   * Ejecuta una acción del operador. Estas devuelven el estado completo de la compañía, así que se
+   * dibuja de inmediato sin esperar al siguiente sondeo.
+   */
+  const accionPlanta = useCallback(
+    async (accion: () => Promise<EstadoPlanta>) => {
+      try {
+        const estado = await accion()
+        if (estado.idCompania === idActual.current) setPlanta(estado)
+      } catch (e) {
+        avisar(mensajeDe(e))
+      }
+    },
+    [avisar],
   )
 
   return {
     planta,
     companias,
     error,
+    aviso,
     iniciar: () => ejecutar(api.iniciar),
     pausar: () => ejecutar(api.pausar),
     paso: () => ejecutar(api.paso),
     reiniciar: () => ejecutar(api.reiniciar),
+    inyectarFallo: (indice: number, indiceSensor: number, magnitud: Magnitud) =>
+      accionPlanta(() => api.inyectarFallo(idCompania, indice, indiceSensor, magnitud)),
+    pararOArrancar: (indice: number) => accionPlanta(() => api.pararOArrancar(idCompania, indice)),
+    cambiarCarga: (indice: number, carga: number) =>
+      accionPlanta(() => api.cambiarCarga(idCompania, indice, carga)),
+    deshacer: () => accionPlanta(() => api.deshacer(idCompania)),
   }
 }

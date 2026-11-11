@@ -6,18 +6,20 @@ interface PropsHud {
   idCompania: number
   seleccionarCompania: (id: number) => void
   error: string | null
+  aviso: string | null
   iniciar: () => void
   pausar: () => void
   paso: () => void
   reiniciar: () => void
+  deshacer: () => void
 }
 
 /**
- * Barra superior: controles de la simulación, tick y semilla, y debajo una pestaña por compañía.
- * Si el backend no responde, muestra el error al final.
+ * Barra superior: controles de la simulación, tick y semilla, deshacer, y debajo una pestaña por
+ * compañía. Si el backend no responde, muestra el error al final; si una acción se rechazó, su aviso.
  */
 export function Hud(props: PropsHud) {
-  const { planta, companias, idCompania, seleccionarCompania, error } = props
+  const { planta, companias, idCompania, seleccionarCompania, error, aviso } = props
 
   return (
     <div className="hud-superior">
@@ -32,6 +34,13 @@ export function Hud(props: PropsHud) {
             )}
             <button onClick={props.paso}>Paso</button>
             <button onClick={props.reiniciar}>Reiniciar</button>
+            <button
+              disabled={planta.pilaDeshacer.length === 0}
+              title={planta.pilaDeshacer[0] ? `Deshacer: ${planta.pilaDeshacer[0]}` : 'No hay acciones para deshacer'}
+              onClick={props.deshacer}
+            >
+              ↶ Deshacer ({planta.pilaDeshacer.length})
+            </button>
             <span className="dato">
               Tick <b>{planta.tick}</b>
             </span>
@@ -57,6 +66,7 @@ export function Hud(props: PropsHud) {
         </div>
       )}
       {error && <div className="panel error">{error}</div>}
+      {aviso && <div className="panel aviso">{aviso}</div>}
     </div>
   )
 }

@@ -1,6 +1,8 @@
 import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import type { ThreeEvent } from '@react-three/fiber'
 import { useRef } from 'react'
+import type { RefObject } from 'react'
 import type { MeshStandardMaterial } from 'three'
 import type { Maquina } from '../api/tipos'
 import { COLOR_ESTADO, NOMBRE_ESTADO } from '../colores'
@@ -8,6 +10,10 @@ import { COLOR_ESTADO, NOMBRE_ESTADO } from '../colores'
 interface PropsMaquinaModelo {
   maquina: Maquina
   posicion: [number, number, number]
+  seleccionada: boolean
+  alSeleccionar: () => void
+  /** Contenedor fijo donde se agrega la etiqueta HTML (ver `Escena`). */
+  capaEtiquetas: RefObject<HTMLDivElement | null>
 }
 
 /**
@@ -15,8 +21,11 @@ interface PropsMaquinaModelo {
  *
  * En EN_ALARMA la baliza parpadea. Encima lleva la etiqueta con su índice en el inventario
  * (`[0] PRENSA-01`), porque las máquinas se identifican por su posición en el `ArrayList`.
+ *
+ * Al hacer clic se selecciona, y la seleccionada lleva un anillo blanco en el piso.
  */
-export function MaquinaModelo({ maquina, posicion }: PropsMaquinaModelo) {
+export function MaquinaModelo(props: PropsMaquinaModelo) {
+  const { maquina, posicion, seleccionada, alSeleccionar, capaEtiquetas } = props
   const baliza = useRef<MeshStandardMaterial>(null)
   const color = COLOR_ESTADO[maquina.estado]
   const enAlarma = maquina.estado === 'EN_ALARMA'
@@ -27,8 +36,26 @@ export function MaquinaModelo({ maquina, posicion }: PropsMaquinaModelo) {
     baliza.current.emissiveIntensity = enAlarma && Math.sin(clock.elapsedTime * 8) < 0 ? 0.1 : 1.2
   })
 
+  function alHacerClic(evento: ThreeEvent<MouseEvent>) {
+    // Sin esto, el clic también llegaría al lienzo y quitaría la selección.
+    evento.stopPropagation()
+    alSeleccionar()
+  }
+
   return (
-    <group position={posicion}>
+    <group
+      position={posicion}
+      onClick={alHacerClic}
+      onPointerOver={() => (document.body.style.cursor = 'pointer')}
+      onPointerOut={() => (document.body.style.cursor = 'auto')}
+    >
+      {/* Anillo de selección */}
+      {seleccionada && (
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.85, 2.05, 48]} />
+          <meshBasicMaterial color="#ffffff" />
+        </mesh>
+      )}
       {/* Base */}
       <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
         <boxGeometry args={[2.4, 0.3, 2.4]} />
@@ -45,7 +72,14 @@ export function MaquinaModelo({ maquina, posicion }: PropsMaquinaModelo) {
         <meshStandardMaterial ref={baliza} color={color} emissive={color} emissiveIntensity={1.2} />
       </mesh>
       {/* Etiqueta: HTML anclado a la posición 3D */}
-      <Html position={[0, 2.6, 0]} center zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+      <Html
+        position={[0, 2.6, 0]}
+        center
+        // drei declara el contenedor sin `null`; cuando la etiqueta se monta, la capa ya existe.
+        portal={capaEtiquetas as RefObject<HTMLElement>}
+        zIndexRange={[5, 0]}
+        style={{ pointerEvents: 'none' }}
+      >
         <div className="etiqueta-maquina">
           <div>
             <span className="indice">[{maquina.indice}]</span> {maquina.etiqueta}
