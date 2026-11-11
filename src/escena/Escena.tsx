@@ -1,8 +1,11 @@
 import { Canvas } from '@react-three/fiber'
 import { useRef } from 'react'
-import type { Maquina } from '../api/tipos'
+import type { ColaPrioridad, EventoFallo, Maquina } from '../api/tipos'
 import { AnilloLecturas } from './AnilloLecturas'
+import { BandaEventos } from './BandaEventos'
+import { CapaEtiquetas } from './capaEtiquetas'
 import { MaquinaModelo } from './MaquinaModelo'
+import { TableroPrioridad } from './TableroPrioridad'
 import './escena.css'
 
 /** Máquinas por fila en el piso. */
@@ -11,9 +14,11 @@ const COLUMNAS = 3
 const SEPARACION = 4
 /**
  * Cuánto se acerca el diorama a la cámara, en x y en z. En la vista isométrica, acercarlo lo baja en
- * pantalla: así la fila de atrás (la máquina 0) no queda debajo de la barra superior del HUD.
+ * pantalla: así deja espacio a la barra superior del HUD.
  */
 const DESPLAZAMIENTO = 2
+/** Espacio de la zona de control: la banda de eventos atrás y el tablero P1–P4 a la derecha. */
+const ANCHO_TABLERO = 5
 
 /**
  * Posición en el piso de la máquina `indice`: se reparten por filas en orden de índice,
@@ -28,6 +33,8 @@ function posicionDe(indice: number, total: number): [number, number, number] {
 
 interface PropsEscena {
   maquinas: Maquina[]
+  eventos: EventoFallo[]
+  colaPrioridad: ColaPrioridad | null
   /** Índice de la máquina seleccionada, o `null`. */
   seleccionada: number | null
   seleccionar: (indice: number | null) => void
@@ -36,69 +43,86 @@ interface PropsEscena {
 }
 
 /**
- * El mundo 3D: cámara isométrica fija, luces, piso y las máquinas.
+ * El mundo 3D: cámara isométrica fija, luces, piso, las máquinas y las colas de la planta.
  *
  * La cámara es ortográfica (sin perspectiva) y mira al origen desde la diagonal (1, 1, 1): esa es la
  * vista isométrica. No hay controles de cámara: el diorama siempre se ve igual.
  *
+ * Distribución: las máquinas en una cuadrícula; detrás, la banda de eventos, que termina en el
+ * clasificador; a la derecha, el tablero P1–P4, que empieza junto al clasificador. Todo se calcula a partir
+ * del tamaño de la cuadrícula, así sigue en su lugar si se crean máquinas.
+ *
  * Un clic en una máquina la selecciona y muestra su cola circular en el piso; un clic en el vacío quita
  * la selección.
  */
-export function Escena({ maquinas, seleccionada, seleccionar, sensorVista }: PropsEscena) {
+export function Escena(props: PropsEscena) {
+  const { maquinas, eventos, colaPrioridad, seleccionada, seleccionar, sensorVista } = props
   const filas = Math.max(1, Math.ceil(maquinas.length / COLUMNAS))
   const maquinaSeleccionada = seleccionada === null ? undefined : maquinas[seleccionada]
-  /**
-   * Contenedor fijo para las etiquetas HTML. Sin él, cada etiqueta (`Html` de drei) elige su contenedor
-   * al montarse y lo cambia cuando React Three Fiber conecta sus eventos; al cambiarlo rehace su raíz de
-   * React en medio de un render, y en esa carrera la primera etiqueta quedaba vacía.
-   */
+  /** Contenedor fijo para las etiquetas HTML (ver `CapaEtiquetas`). */
   const capaEtiquetas = useRef<HTMLDivElement>(null)
+
+  // Bordes de la cuadrícula de máquinas.
+  const mitadX = (COLUMNAS * SEPARACION) / 2
+  const mitadZ = (filas * SEPARACION) / 2
+  // Banda de eventos detrás de las máquinas; tablero a la derecha.
+  const zBanda = -mitadZ - 2
+  const xTablero = mitadX + 1.4
+  // Piso que cubre todo, y desplazamiento que lo centra en pantalla.
+  const piso = { xMin: -mitadX - 1, xMax: xTablero + ANCHO_TABLERO, zMin: zBanda - 1.2, zMax: mitadZ + 1.5 }
+  const centroX = (piso.xMin + piso.xMax) / 2
+  const centroZ = (piso.zMin + piso.zMax) / 2
 
   return (
     <div ref={capaEtiquetas} className="escena">
-      <Canvas
-        shadows
-        orthographic
-        camera={{ position: [20, 20, 20], zoom: 45 }}
-        onPointerMissed={() => seleccionar(null)}
-      >
-        <color attach="background" args={['#1e2530']} />
-        <ambientLight intensity={0.6} />
-        <directionalLight
-          position={[8, 14, 5]}
-          intensity={1.6}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-left={-15}
-          shadow-camera-right={15}
-          shadow-camera-top={15}
-          shadow-camera-bottom={-15}
-        />
-        <group position={[DESPLAZAMIENTO, 0, DESPLAZAMIENTO]}>
-          {/* Piso */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={[COLUMNAS * SEPARACION + 2, filas * SEPARACION + 2]} />
-            <meshStandardMaterial color="#2a3240" />
-          </mesh>
-          {maquinas.map((maquina) => (
-            <MaquinaModelo
-              key={maquina.indice}
-              maquina={maquina}
-              posicion={posicionDe(maquina.indice, maquinas.length)}
-                alSeleccionar={() => seleccionar(maquina.indice)}
-              capaEtiquetas={capaEtiquetas}
-            />
-          ))}
-        {maquinaSeleccionada && (
-          <AnilloLecturas
-            cola={maquinaSeleccionada.lecturas}
-            sensor={maquinaSeleccionada.sensores[sensorVista]}
-            indiceSensor={sensorVista}
-            posicion={posicionDe(maquinaSeleccionada.indice, maquinas.length)}
+      <CapaEtiquetas.Provider value={capaEtiquetas}>
+        <Canvas
+          shadows
+          orthographic
+          camera={{ position: [20, 20, 20], zoom: 40 }}
+          onPointerMissed={() => seleccionar(null)}
+        >
+          <color attach="background" args={['#1e2530']} />
+          <ambientLight intensity={0.6} />
+          <directionalLight
+            position={[8, 14, 5]}
+            intensity={1.6}
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+            shadow-camera-left={-18}
+            shadow-camera-right={18}
+            shadow-camera-top={18}
+            shadow-camera-bottom={-18}
           />
-        )}
-        </group>
-      </Canvas>
+          <group position={[-centroX + DESPLAZAMIENTO, 0, -centroZ + DESPLAZAMIENTO]}>
+            {/* Piso */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centroX, 0, centroZ]} receiveShadow>
+              <planeGeometry args={[piso.xMax - piso.xMin, piso.zMax - piso.zMin]} />
+              <meshStandardMaterial color="#2a3240" />
+            </mesh>
+            {maquinas.map((maquina) => (
+              <MaquinaModelo
+                key={maquina.indice}
+                maquina={maquina}
+                posicion={posicionDe(maquina.indice, maquinas.length)}
+                alSeleccionar={() => seleccionar(maquina.indice)}
+              />
+            ))}
+            {maquinaSeleccionada && (
+              <AnilloLecturas
+                cola={maquinaSeleccionada.lecturas}
+                sensor={maquinaSeleccionada.sensores[sensorVista]}
+                indiceSensor={sensorVista}
+                posicion={posicionDe(maquinaSeleccionada.indice, maquinas.length)}
+              />
+            )}
+            <BandaEventos eventos={eventos} xEntrada={-mitadX} xSalida={mitadX - 0.4} z={zBanda} />
+            {colaPrioridad && (
+              <TableroPrioridad cola={colaPrioridad} x={xTablero} zEntrada={zBanda + 0.7} zSalida={mitadZ} />
+            )}
+          </group>
+        </Canvas>
+      </CapaEtiquetas.Provider>
     </div>
   )
 }

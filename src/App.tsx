@@ -33,6 +33,8 @@ function App() {
     <>
       <Escena
         maquinas={planta?.maquinas ?? []}
+        eventos={planta?.eventos ?? []}
+        colaPrioridad={planta?.colaPrioridad ?? null}
         seleccionada={seleccionada}
         seleccionar={seleccionarMaquina}
         sensorVista={sensorVista}

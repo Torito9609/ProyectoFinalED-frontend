@@ -1,18 +1,15 @@
-import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import { useRef } from 'react'
-import type { RefObject } from 'react'
 import type { MeshStandardMaterial } from 'three'
 import type { Maquina } from '../api/tipos'
 import { COLOR_ESTADO, NOMBRE_ESTADO } from '../colores'
+import { Etiqueta } from './Etiqueta'
 
 interface PropsMaquinaModelo {
   maquina: Maquina
   posicion: [number, number, number]
   alSeleccionar: () => void
-  /** Contenedor fijo donde se agrega la etiqueta HTML (ver `Escena`). */
-  capaEtiquetas: RefObject<HTMLDivElement | null>
 }
 
 /**
@@ -23,8 +20,7 @@ interface PropsMaquinaModelo {
  *
  * Al hacer clic se selecciona; la escena dibuja entonces su cola circular alrededor de ella.
  */
-export function MaquinaModelo(props: PropsMaquinaModelo) {
-  const { maquina, posicion, alSeleccionar, capaEtiquetas } = props
+export function MaquinaModelo({ maquina, posicion, alSeleccionar }: PropsMaquinaModelo) {
   const baliza = useRef<MeshStandardMaterial>(null)
   const color = COLOR_ESTADO[maquina.estado]
   const enAlarma = maquina.estado === 'EN_ALARMA'
@@ -63,24 +59,14 @@ export function MaquinaModelo(props: PropsMaquinaModelo) {
         <cylinderGeometry args={[0.25, 0.25, 0.4, 12]} />
         <meshStandardMaterial ref={baliza} color={color} emissive={color} emissiveIntensity={1.2} />
       </mesh>
-      {/* Etiqueta: HTML anclado a la posición 3D */}
-      <Html
-        position={[0, 2.6, 0]}
-        center
-        // drei declara el contenedor sin `null`; cuando la etiqueta se monta, la capa ya existe.
-        portal={capaEtiquetas as RefObject<HTMLElement>}
-        zIndexRange={[5, 0]}
-        style={{ pointerEvents: 'none' }}
-      >
-        <div className="etiqueta-maquina">
-          <div>
-            <span className="indice">[{maquina.indice}]</span> {maquina.etiqueta}
-          </div>
-          <div className="estado" style={{ color }}>
-            {NOMBRE_ESTADO[maquina.estado]}
-          </div>
+      <Etiqueta posicion={[0, 2.6, 0]} className="etiqueta-maquina">
+        <div>
+          <span className="indice">[{maquina.indice}]</span> {maquina.etiqueta}
         </div>
-      </Html>
+        <div className="estado" style={{ color }}>
+          {NOMBRE_ESTADO[maquina.estado]}
+        </div>
+      </Etiqueta>
     </group>
   )
 }

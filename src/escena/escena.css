@@ -25,3 +25,27 @@
 .etiqueta-maquina .estado {
   font: 11px var(--sans);
 }
+
+/* Etiquetas pequeñas de la escena: colas, carriles y sus elementos. */
+.etiqueta {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font: 11px var(--mono);
+  white-space: nowrap;
+  user-select: none;
+  color: var(--texto-suave);
+}
+
+.etiqueta-caja {
+  color: var(--texto);
+  padding: 0 4px;
+  font-size: 10px;
+}
+
+.etiqueta-siguiente {
+  color: #11161d;
+  background: #ffffff;
+  font-weight: bold;
+}
