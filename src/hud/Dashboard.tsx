@@ -4,6 +4,7 @@ import type { TipoMaquina } from '../api/tipos'
 import { useSuperusuario } from '../estado/useSuperusuario'
 import type { FiltroRanking } from '../estado/useSuperusuario'
 import { FormulariosCreacion } from './FormulariosCreacion'
+import { GraficaHistorial } from './GraficaHistorial'
 import { PanelOverhauls } from './PanelOverhauls'
 import { TablaRanking } from './TablaRanking'
 import { TarjetaCompania } from './TarjetaCompania'
@@ -20,7 +21,8 @@ interface PropsDashboard {
 /**
  * La vista del superusuario: todas las compañías con sus totales, el ranking de fallos con sus acciones
  * (aprobar overhaul y reemplazar), el montículo de overhauls con los técnicos del fabricante y los
- * formularios para crear compañías y máquinas. Es HTML, sin escena 3D.
+ * formularios para crear compañías y máquinas, y la gráfica del historial por ventana de ticks. Es HTML, sin
+ * escena 3D.
  */
 export function Dashboard({ abrirCompania, companiaCreada, avisar }: PropsDashboard) {
   const [filtro, setFiltro] = useState<FiltroRanking>({ idCompania: null, soloCandidatas: false })
@@ -78,6 +80,7 @@ export function Dashboard({ abrirCompania, companiaCreada, avisar }: PropsDashbo
           />
         </div>
       </div>
+      <GraficaHistorial companias={companias} />
     </div>
   )
 }

@@ -692,3 +692,78 @@
   padding: 1px 8px;
   font-size: 12px;
 }
+
+/* Historial: dos series por tick con su total y su pico (árbol de segmentos) */
+.historial .vacio {
+  padding: 8px 0;
+}
+
+.historial .ventana {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 6px 16px;
+  margin-bottom: 6px;
+}
+
+.historial .ventana label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.historial .ventana label > span {
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.historial .ventana input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+.historial .ventana input[type='number'] {
+  width: 70px;
+}
+
+.historial .serie {
+  margin-top: 8px;
+}
+
+.historial .cifras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-weight: normal;
+  font-family: var(--mono);
+}
+
+.historial .grafica {
+  display: block;
+  width: 100%;
+  height: 120px;
+  margin-top: 4px;
+  background: #1a212b;
+  border-radius: 6px;
+  cursor: crosshair;
+}
+
+.linea-pico {
+  stroke: #ffffff;
+  stroke-width: 1;
+  stroke-dasharray: 6 4;
+}
+
+.linea-cursor {
+  stroke: #ffffff;
+  stroke-opacity: 0.6;
+  stroke-width: 1;
+}
+
+.historial .eje {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
