@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Magnitud, Maquina } from '../api/tipos'
 import { COLOR_ESTADO, NOMBRE_ESTADO, NOMBRE_TIPO_FALLO, colorLectura } from '../colores'
+import { estaLibre } from '../reglas'
 import { ColaCircularHud } from './ColaCircularHud'
 
 interface PropsPanelMaquina {
@@ -14,6 +15,8 @@ interface PropsPanelMaquina {
   inyectarFallo: (indiceSensor: number, magnitud: Magnitud) => void
   pararOArrancar: () => void
   cambiarCarga: (carga: number) => void
+  aprobarOverhaul: () => void
+  reemplazar: () => void
 }
 
 const MAGNITUDES: Magnitud[] = ['LEVE', 'MODERADA', 'SEVERA']
@@ -42,6 +45,8 @@ export function PanelMaquina(props: PropsPanelMaquina) {
 
   const puedeParar = maquina.estado === 'OPERANDO' || maquina.estado === 'PARADA_MANUAL'
   const tieneFallo = maquina.tieneAnomalia || maquina.alarmaActiva
+  const puedeAprobar = maquina.recomendacion !== 'NINGUNA' && !maquina.overhaulPendiente
+  const puedeReemplazar = maquina.recomendacion === 'REEMPLAZO' && estaLibre(maquina.estado)
 
   return (
     <div className="panel panel-maquina">
@@ -70,8 +75,31 @@ export function PanelMaquina(props: PropsPanelMaquina) {
         <dt>Overhauls</dt>
         <dd>{maquina.numeroOverhauls}</dd>
         <dt>Recomendación</dt>
-        <dd>{maquina.recomendacion === 'NINGUNA' ? '—' : maquina.recomendacion}</dd>
+        <dd>
+          {maquina.recomendacion === 'NINGUNA' ? '—' : maquina.recomendacion}
+          {maquina.overhaulPendiente && ' · en espera'}
+        </dd>
       </dl>
+      {maquina.recomendacion !== 'NINGUNA' && (
+        <div className="fila">
+          <button
+            disabled={bloqueada || !puedeAprobar}
+            title={maquina.overhaulPendiente ? 'Ya tiene una solicitud en el montículo' : undefined}
+            onClick={props.aprobarOverhaul}
+          >
+            Aprobar overhaul
+          </button>
+          {maquina.recomendacion === 'REEMPLAZO' && (
+            <button
+              disabled={bloqueada || !puedeReemplazar}
+              title={estaLibre(maquina.estado) ? undefined : 'La máquina no está libre'}
+              onClick={props.reemplazar}
+            >
+              Reemplazar
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="seccion">Sensores (última lectura)</div>
       <table className="sensores">

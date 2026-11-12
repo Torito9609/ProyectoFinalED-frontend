@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../api/cliente'
-import type { Ranking, ResumenCompania, TipoMaquinaCatalogo } from '../api/tipos'
+import type { EstadoOverhauls, Ranking, ResumenCompania, TipoMaquinaCatalogo } from '../api/tipos'
 
 /** Cada cuánto se piden los datos del dashboard (ms). */
 const INTERVALO_SONDEO_MS = 1000
@@ -13,8 +13,8 @@ export interface FiltroRanking {
 }
 
 /**
- * Datos de la vista del superusuario: los totales de cada compañía, el ranking de fallos y el catálogo de
- * tipos de máquina. Sondea solo mientras el dashboard está montado, con `setTimeout` encadenado como el
+ * Datos de la vista del superusuario: los totales de cada compañía, el ranking de fallos, el montículo de
+ * solicitudes de overhaul con los técnicos del fabricante, y el catálogo de tipos de máquina. Sondea solo mientras el dashboard está montado, con `setTimeout` encadenado como el
  * sondeo de la planta.
  *
  * "Solo candidatas" pide el ranking con `puntajeMinimo = umbralOverhaul`: es la consulta por rango del
@@ -23,6 +23,7 @@ export interface FiltroRanking {
 export function useSuperusuario(filtro: FiltroRanking) {
   const [companias, setCompanias] = useState<ResumenCompania[]>([])
   const [ranking, setRanking] = useState<Ranking | null>(null)
+  const [overhauls, setOverhauls] = useState<EstadoOverhauls | null>(null)
   const [catalogo, setCatalogo] = useState<TipoMaquinaCatalogo[]>([])
 
   const { idCompania, soloCandidatas } = filtro
@@ -31,12 +32,14 @@ export function useSuperusuario(filtro: FiltroRanking) {
 
   const refrescar = useCallback(async () => {
     const minimo = soloCandidatas ? umbral : undefined
-    const [lista, rank] = await Promise.all([
+    const [lista, rank, monticulo] = await Promise.all([
       api.listarCompanias(),
       api.obtenerRanking(idCompania ?? undefined, minimo),
+      api.obtenerOverhauls(),
     ])
     setCompanias(lista)
     setRanking(rank)
+    setOverhauls(monticulo)
   }, [idCompania, soloCandidatas, umbral])
 
   useEffect(() => {
@@ -69,5 +72,5 @@ export function useSuperusuario(filtro: FiltroRanking) {
       })
   }, [])
 
-  return { companias, ranking, catalogo, refrescar }
+  return { companias, ranking, overhauls, catalogo, refrescar }
 }

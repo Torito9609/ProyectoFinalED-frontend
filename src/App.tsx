@@ -56,7 +56,7 @@ function App() {
         />
       )}
       {vista === 'SUPERUSUARIO' && (
-        <Dashboard abrirCompania={abrirCompania} companiaCreada={estado.recargarCompanias} />
+        <Dashboard abrirCompania={abrirCompania} companiaCreada={estado.recargarCompanias} avisar={estado.avisar} />
       )}
       <Hud
         planta={planta}
@@ -87,6 +87,8 @@ function App() {
           inyectarFallo={(sensor, magnitud) => estado.inyectarFallo(maquina.indice, sensor, magnitud)}
           pararOArrancar={() => estado.pararOArrancar(maquina.indice)}
           cambiarCarga={(carga) => estado.cambiarCarga(maquina.indice, carga)}
+          aprobarOverhaul={() => estado.aprobarOverhaul(maquina.indice)}
+          reemplazar={() => estado.reemplazar(maquina.indice)}
         />
       )}
       {vista === 'COMPANIA' && planta && <Bitacora lineas={planta.bitacora} />}

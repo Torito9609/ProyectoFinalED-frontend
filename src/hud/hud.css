@@ -614,3 +614,81 @@
 .formularios .mensaje {
   color: var(--texto-suave);
 }
+
+/* Overhauls: el montículo (cima y orden de salida) y los técnicos del fabricante */
+.columna-derecha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overhauls .seccion {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.overhauls .vacio {
+  padding: 4px 0;
+}
+
+.lista-salida {
+  margin: 6px 0 0;
+  padding-left: 22px;
+}
+
+.lista-salida li {
+  padding: 3px 6px;
+  border-radius: 6px;
+}
+
+.lista-salida li > span {
+  margin-right: 8px;
+}
+
+.lista-salida .clave {
+  float: right;
+  font-family: var(--mono);
+  color: var(--texto-suave);
+}
+
+.lista-salida li.cima {
+  background: rgba(163, 113, 247, 0.22);
+  border: 1px solid #a371f7;
+}
+
+.lista-salida li.cima .clave {
+  color: var(--texto);
+}
+
+.insignia-cima {
+  padding: 0 5px;
+  border-radius: 4px;
+  font: bold 11px var(--sans);
+  color: #11161d;
+  background: #a371f7;
+}
+
+.ficha {
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: #2c3644;
+  border: 1px solid var(--borde);
+}
+
+.ficha.frente {
+  border-color: #ffffff;
+}
+
+.overhauls .ocupado {
+  margin: 4px 0;
+}
+
+.tabla td.acciones {
+  font-family: var(--sans);
+}
+
+.tabla td.acciones button {
+  margin-left: 6px;
+  padding: 1px 8px;
+  font-size: 12px;
+}

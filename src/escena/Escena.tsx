@@ -3,6 +3,7 @@ import { useRef } from 'react'
 import type { ColaPrioridad, EventoFallo, Maquina, Tecnico, TipoFallo } from '../api/tipos'
 import { AnilloLecturas } from './AnilloLecturas'
 import { BandaEventos } from './BandaEventos'
+import { Camion } from './Camion'
 import { CapaEtiquetas } from './capaEtiquetas'
 import { MaquinaModelo } from './MaquinaModelo'
 import { PilaDeshacer } from './PilaDeshacer'
@@ -56,7 +57,8 @@ interface PropsEscena {
  *
  * Distribución: las máquinas en una cuadrícula; detrás, la banda de eventos, que termina en el
  * clasificador; a la derecha, el tablero P1–P4, que empieza junto al clasificador y termina en las bancas
- * de los técnicos; a la izquierda, el escritorio con la pila de deshacer. Todo se calcula a partir
+ * de los técnicos; a la izquierda, el escritorio con la pila de deshacer. Junto a cada máquina en overhaul se
+ * estaciona el camión del fabricante, en el pasillo a su izquierda. Todo se calcula a partir
  * del tamaño de la cuadrícula, así sigue en su lugar si se crean máquinas.
  *
  * Un clic en una máquina la selecciona y muestra su cola circular en el piso; un clic en el vacío quita
@@ -142,6 +144,18 @@ export function Escena(props: PropsEscena) {
               posicionMaquina={(indice) => posicionDe(indice, maquinas.length)}
             />
             <PilaDeshacer acciones={pilaDeshacer} posicion={posicionEscritorio} />
+            {maquinas
+              .filter((maquina) => maquina.estado === 'EN_OVERHAUL')
+              .map((maquina) => {
+                const [x, , z] = posicionDe(maquina.indice, maquinas.length)
+                return (
+                  <Camion
+                    key={maquina.indice}
+                    destino={[x - SEPARACION / 2, 0, z]}
+                    origen={[x - SEPARACION / 2, 0, piso.zMax + 3]}
+                  />
+                )
+              })}
           </group>
         </Canvas>
       </CapaEtiquetas.Provider>

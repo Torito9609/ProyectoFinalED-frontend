@@ -191,6 +191,7 @@ export function usePlanta(idCompania: number) {
     recargarCompanias,
     error,
     aviso,
+    avisar,
     iniciar: () => ejecutar(api.iniciar),
     pausar: () => ejecutar(api.pausar),
     paso: () => ejecutar(api.paso),
@@ -205,5 +206,8 @@ export function usePlanta(idCompania: number) {
     clasificarSiguiente: () => accionPlanta(() => api.clasificarSiguiente(idCompania)),
     asignarSiguiente: (especialidad: TipoFallo) =>
       accionPlanta(() => api.asignarSiguiente(idCompania, especialidad)),
+    // Aprobar devuelve el montículo, no la planta: se vuelve a pedir la compañía para ver `overhaulPendiente`.
+    aprobarOverhaul: (indice: number) => ejecutar(() => api.aprobarOverhaul(idCompania, indice)),
+    reemplazar: (indice: number) => accionPlanta(() => api.reemplazarMaquina(idCompania, indice)),
   }
 }
