@@ -63,6 +63,36 @@ el backend. Tampoco dibuja estado interno que la estructura no expone.
 
 ## Ejecutar
 
+### Backend y frontend con un solo comando (recomendado)
+
+El repositorio del backend trae scripts que levantan las dos partes juntas. Basta con clonar los dos
+repositorios como carpetas hermanas:
+
+```
+ProyectoFinal/
+├── ProyectoFinalED/            ← backend (aquí están los scripts)
+└── ProyectoFinalED-frontend/   ← este repositorio
+```
+
+y ejecutar desde la carpeta del backend (además de Node.js, necesita el JDK 21):
+
+```bash
+./levantar.sh                                  # Linux o macOS
+FRONTEND_DIR=/ruta/al/frontend ./levantar.sh   # si este repositorio está en otra carpeta
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\levantar.ps1   # Windows
+```
+
+En Windows también sirve el **doble clic en `levantar.cmd`**. Los scripts revisan que los puertos 8080 y
+5173 estén libres, corren `npm install` la primera vez, esperan a que la API responda y luego abren el
+frontend en `http://localhost:5173`. **Ctrl+C detiene los dos.**
+
+### Solo el frontend
+
+Con el backend ya corriendo:
+
 ```bash
 npm install
 npm run dev        # abre http://localhost:5173
